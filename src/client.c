@@ -11,7 +11,7 @@ void	send_char(int pid, char c)
 			kill(pid, SIGUSR1);
 		else
 			kill(pid, SIGUSR2);
-		usleep(100);
+		usleep(300);
 		bit++;
 	}
 }
@@ -57,7 +57,8 @@ int	main(int ac, char **av)
 		i++;
 	}
 	send_char(pid, '\0');
-	usleep(5000);
+	//usleep(500);
+	pause();
 	return(0);
 
 }

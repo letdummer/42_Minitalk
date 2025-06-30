@@ -2,64 +2,77 @@
 // if SIGUSR1 => 1
 // if SIGUSR2 => 0
 
+typedef struct s_data
+{
+	int		bit_count;
+	char	c;
+	char	*message;
+	size_t	index;
+	size_t	message_length;
+	int		receiving_length;
+	size_t	length_bits_received;
+}	t_data;
+
+static int	handle_length(int signum, t_data *data)
+{
+	if (signum == SIGUSR1)
+		data->message_length |= (1UL << data->length_bits_received);
+	data->length_bits_received++;
+	if (data->length_bits_received == sizeof(size_t) * 8)
+	{
+		data->receiving_length = 0;
+		data->message = malloc(data->message_length + 1);
+		ft_printf("\n");
+		if (!data->message)
+		{
+			ft_printf("Memory allocation failed l = %d\n", data->message_length + 1);
+			data->receiving_length = 1;
+			data->message_length = 0;
+			data->length_bits_received = 0;
+			return (1);
+		}
+		data->message[data->message_length] = '\0';
+	}
+	return (0);
+}
+
+static void	handle_message(int signum, siginfo_t *info, t_data *data)
+{
+	if (signum == SIGUSR1)
+		data->c = data->c | (1 << data->bit_count);
+	data->bit_count++;
+	if (data->bit_count == 8)
+	{
+		data->message[data->index++] = data->c;
+		if (data->c == '\0')
+		{
+			ft_putstr_fd(data->message, 1);
+			ft_putchar_fd('\n', 1);
+			free(data->message);
+			data->message = NULL;
+			data->index = 0;
+			data->receiving_length = 1;
+			data->message_length = 0;
+			data->length_bits_received = 0;
+			kill(info->si_pid, SIGUSR1);
+		}
+		data->bit_count = 0;
+		data->c = 0;
+	}
+}
+
 void	handler(int signum, siginfo_t *info, void *context)
 {
-	static int		bit_count;
-	static char		c;
-	static char		*message = NULL;
-	static size_t	index;
-	static size_t	message_length;
-	static int		receiving_length = 1;
-	static size_t	length_bits_received;
+	static t_data	data = {0, 0, NULL, 0, 0, 1, 0};
 
-	
 	(void)context;
-	(void)info;
-	if (receiving_length)
+	if (data.receiving_length)
 	{
-		if (signum == SIGUSR1)
-			message_length |= (1UL << length_bits_received);
-		length_bits_received++;
-		if (length_bits_received == sizeof(size_t) * 8)
-		{
-			receiving_length = 0;
-			message = malloc(message_length + 1);
-			ft_printf("trying to allocate  %d characters\n", message_length +1 );
-		if (!message)
-		{
-			ft_printf("Memory allocation failed l = %d\n", message_length +1);
-			receiving_length = 1;
-			message_length = 0;
-			length_bits_received = 0;
+		if (handle_length(signum, &data))
 			return;
-		}
-			message[message_length] = '\0';
-		}
 		return;
 	}
-	if (signum == SIGUSR1)
-		c = c | (1 << bit_count);
-	bit_count++;
-	if (bit_count == 8)
-	{
-		message[index++] = c;
-		if (c == '\0')
-		{
-			ft_putstr_fd(message, 1);
-			ft_putchar_fd('\n', 1);
-			free(message);
-			message = NULL;
-			index = 0;
-			receiving_length = 1;
-			message_length = 0;
-			length_bits_received = 0;
-			kill(info->si_pid, SIGUSR1);
-
-		}
-		bit_count = 0;
-		c = 0;
-	}
-	
+	handle_message(signum, info, &data);
 }
 int	main(int ac, char **av)
 {
