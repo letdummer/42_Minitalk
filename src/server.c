@@ -4,13 +4,13 @@
 
 void	handler(int signum, siginfo_t *info, void *context)
 {
-	static int		bit_count = 0;
-	static char		c = 0;
+	static int		bit_count;
+	static char		c;
 	static char		*message = NULL;
-	static size_t	index = 0;
-	static size_t	message_length = 0;
+	static size_t	index;
+	static size_t	message_length;
 	static int		receiving_length = 1;
-	static size_t	length_bits_received = 0;
+	static size_t	length_bits_received;
 
 	
 	(void)context;
@@ -24,9 +24,10 @@ void	handler(int signum, siginfo_t *info, void *context)
 		{
 			receiving_length = 0;
 			message = malloc(message_length + 1);
+			ft_printf("trying to allocate  %d characters\n", message_length +1 );
 		if (!message)
 		{
-			ft_printf("Memory allocation failed\n");
+			ft_printf("Memory allocation failed l = %d\n", message_length +1);
 			receiving_length = 1;
 			message_length = 0;
 			length_bits_received = 0;
@@ -92,3 +93,4 @@ struct sigaction {
 	int		sa_flags;
 	void	 (*sa_restorer)(void);
 }; */
+

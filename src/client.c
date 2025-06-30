@@ -57,6 +57,7 @@ int	main(int ac, char **av)
 		i++;
 	}
 	send_char(pid, '\0');
+	usleep(5000);
 	return(0);
 
 }
