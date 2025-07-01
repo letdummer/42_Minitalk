@@ -6,11 +6,25 @@
 /*   By: ldummer- <ldummer-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 12:37:54 by ldummer-          #+#    #+#             */
-/*   Updated: 2025/07/01 12:39:09 by ldummer-         ###   ########.fr       */
+/*   Updated: 2025/07/01 13:33:11 by ldummer-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
+#include <signal.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+void	message_received(int signum)
+{
+	if (signum == SIGUSR1)
+	{
+		ft_printf("Message sent successfully!\n");
+		exit(0);
+	}
+}
 
 void	send_char(int pid, char c)
 {
@@ -46,13 +60,18 @@ void	send_length(int pid, size_t length)
 
 int	main(int ac, char **av)
 {
-	int		pid;
-	int		i;
-	char	*message;
-	size_t	message_length;
+	int					pid;
+	int					i;
+	char				*message;
+	size_t				message_length;
+	struct sigaction	sa;
 
 	if (ac != 3)
 		exit(ft_printf("Usage: ./client [PID] [MESSAGE]\n"));
+	sa.sa_handler = message_received;
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGUSR1, &sa, NULL);
 	pid = ft_atoi(av[1]);
 	if (pid <= 0)
 		exit(ft_printf("Invalid PID\n"));
@@ -63,12 +82,7 @@ int	main(int ac, char **av)
 	send_length(pid, message_length);
 	i = 0;
 	while (message[i])
-	{
-		send_char(pid, message[i]);
-		i++;
-	}
+		send_char(pid, message[i++]);
 	send_char(pid, '\0');
-	//usleep(500);
 	pause();
-	return (0);
 }
