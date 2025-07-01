@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   client.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ldummer- <ldummer-@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/01 12:37:54 by ldummer-          #+#    #+#             */
+/*   Updated: 2025/07/01 12:39:09 by ldummer-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minitalk.h"
 
 void	send_char(int pid, char c)
@@ -5,7 +17,7 @@ void	send_char(int pid, char c)
 	int	bit;
 
 	bit = 0;
-	while(bit < 8)
+	while (bit < 8)
 	{
 		if ((c >> bit) & 1)
 			kill(pid, SIGUSR1);
@@ -34,14 +46,13 @@ void	send_length(int pid, size_t length)
 
 int	main(int ac, char **av)
 {
-	int	pid;
-	int	i;
+	int		pid;
+	int		i;
 	char	*message;
 	size_t	message_length;
 
 	if (ac != 3)
 		exit(ft_printf("Usage: ./client [PID] [MESSAGE]\n"));
-
 	pid = ft_atoi(av[1]);
 	if (pid <= 0)
 		exit(ft_printf("Invalid PID\n"));
@@ -59,6 +70,5 @@ int	main(int ac, char **av)
 	send_char(pid, '\0');
 	//usleep(500);
 	pause();
-	return(0);
-
+	return (0);
 }

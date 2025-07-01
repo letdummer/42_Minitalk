@@ -1,17 +1,16 @@
-#include "minitalk.h"
-// if SIGUSR1 => 1
-// if SIGUSR2 => 0
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   server.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ldummer- <ldummer-@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/01 12:41:52 by ldummer-          #+#    #+#             */
+/*   Updated: 2025/07/01 12:41:53 by ldummer-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-typedef struct s_data
-{
-	int		bit_count;
-	char	c;
-	char	*message;
-	size_t	index;
-	size_t	message_length;
-	int		receiving_length;
-	size_t	length_bits_received;
-}	t_data;
+#include "minitalk.h"
 
 static int	handle_length(int signum, t_data *data)
 {
@@ -25,7 +24,8 @@ static int	handle_length(int signum, t_data *data)
 		ft_printf("\n");
 		if (!data->message)
 		{
-			ft_printf("Memory allocation failed l = %d\n", data->message_length + 1);
+			ft_printf("Memory allocation failed = %d\n",
+				data->message_length + 1);
 			data->receiving_length = 1;
 			data->message_length = 0;
 			data->length_bits_received = 0;
@@ -69,16 +69,17 @@ void	handler(int signum, siginfo_t *info, void *context)
 	if (data.receiving_length)
 	{
 		if (handle_length(signum, &data))
-			return;
-		return;
+			return ;
+		return ;
 	}
 	handle_message(signum, info, &data);
 }
+
 int	main(int ac, char **av)
 {
 	int					pid;
 	struct sigaction	sa;
-	
+
 	(void)av;
 	if (ac != 1)
 		exit(ft_printf("Usage: ./server\n"));
@@ -86,24 +87,8 @@ int	main(int ac, char **av)
 	ft_printf("pid: %d\n", pid);
 	sa.sa_sigaction = handler;
 	sa.sa_flags = SA_SIGINFO;
-	
 	sigaction(SIGUSR1, &sa, NULL);
 	sigaction(SIGUSR2, &sa, NULL);
-	// mantem o servidor rodando para receber sinais
-	while(1)
+	while (1)
 		pause();
 }
-
-
-
-
-/* The sigaction structure is defined as something like:
-
-struct sigaction {
-	void	 (*sa_handler)(int);
-	void	 (*sa_sigaction)(int, siginfo_t *, void *);
-	sigset_t   sa_mask;
-	int		sa_flags;
-	void	 (*sa_restorer)(void);
-}; */
-

@@ -6,7 +6,7 @@
 /*   By: ldummer- <ldummer-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/06 18:18:59 by ldummer-          #+#    #+#             */
-/*   Updated: 2025/07/01 00:30:05 by ldummer-         ###   ########.fr       */
+/*   Updated: 2025/07/01 12:39:36 by ldummer-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,5 +25,16 @@ typedef struct s_client
 	size_t	message_length;
 	int		index;
 }	t_client;
+
+typedef struct s_data
+{
+	int		bit_count;
+	char	c;
+	char	*message;
+	size_t	index;
+	size_t	message_length;
+	int		receiving_length;
+	size_t	length_bits_received;
+}	t_data;
 
 #endif
