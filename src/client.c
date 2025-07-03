@@ -6,7 +6,7 @@
 /*   By: ldummer- <ldummer-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 12:37:54 by ldummer-          #+#    #+#             */
-/*   Updated: 2025/07/01 13:33:11 by ldummer-         ###   ########.fr       */
+/*   Updated: 2025/07/03 15:10:16 by ldummer-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,13 +17,26 @@
 #include <stdio.h>
 #include <string.h>
 
-void	message_received(int signum)
+// Variável global para controlar o fluxo
+static int g_can_send_message = 0;
+
+void	handle_server_response(int signum)
 {
-	if (signum == SIGUSR1)
-	{
-		ft_printf("Message sent successfully!\n");
-		exit(0);
-	}
+    if (signum == SIGUSR1 && g_can_send_message == 0)
+    {
+		g_can_send_message = 1;
+		ft_printf("Can send message.\n");
+    }
+    else if (signum == SIGUSR1 && g_can_send_message == 1)
+    {
+        ft_printf("Full message received by server!\n");
+        exit(0);
+    }
+    else if (signum == SIGUSR2 && g_can_send_message == 0)
+    {
+        ft_printf("Server couldn't allocate memory for message!\n");
+        exit(1);
+    }
 }
 
 void	send_char(int pid, char c)
@@ -37,7 +50,7 @@ void	send_char(int pid, char c)
 			kill(pid, SIGUSR1);
 		else
 			kill(pid, SIGUSR2);
-		usleep(300);
+		usleep(100);
 		bit++;
 	}
 }
@@ -68,10 +81,11 @@ int	main(int ac, char **av)
 
 	if (ac != 3)
 		exit(ft_printf("Usage: ./client [PID] [MESSAGE]\n"));
-	sa.sa_handler = message_received;
+	sa.sa_handler = handle_server_response;
 	sa.sa_flags = 0;
 	sigemptyset(&sa.sa_mask);
 	sigaction(SIGUSR1, &sa, NULL);
+	sigaction(SIGUSR2, &sa, NULL);
 	pid = ft_atoi(av[1]);
 	if (pid <= 0)
 		exit(ft_printf("Invalid PID\n"));
@@ -80,9 +94,19 @@ int	main(int ac, char **av)
 	message = av[2];
 	message_length = ft_strlen(message);
 	send_length(pid, message_length);
-	i = 0;
-	while (message[i])
-		send_char(pid, message[i++]);
-	send_char(pid, '\0');
+	
+	// Espera pela confirmação de malloc bem-sucedido
 	pause();
+	usleep(50);
+	// Só envia a mensagem se a alocação foi bem-sucedida
+	if (g_can_send_message)
+	{
+		i = 0;
+		while (message[i])
+			send_char(pid, message[i++]);
+		send_char(pid, '\0');
+		pause(); // Espera pela confirmação final
+	}
+	
+	return (0);
 }
