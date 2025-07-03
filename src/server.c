@@ -6,11 +6,26 @@
 /*   By: ldummer- <ldummer-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 12:41:52 by ldummer-          #+#    #+#             */
-/*   Updated: 2025/07/03 15:10:52 by ldummer-         ###   ########.fr       */
+/*   Updated: 2025/07/03 17:22:58 by ldummer-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
+
+static void	reset_server_state(t_data *data)
+{
+	if (data->message)
+	{
+		free(data->message);
+		data->message = NULL;
+	}
+	data->bit_count = 0;
+	data->c = 0;
+	data->index = 0;
+	data->message_length = 0;
+	data->receiving_length = 1;
+	data->length_bits_received = 0;
+}
 
 static int	handle_length(int signum, siginfo_t *info, t_data *data)
 {
@@ -25,16 +40,15 @@ static int	handle_length(int signum, siginfo_t *info, t_data *data)
 		{
 			ft_printf("Memory allocation failed = %d\n",
 			data->message_length + 1);
-			data->receiving_length = 1;
-			data->message_length = 0;
-			data->length_bits_received = 0;
-			usleep(300);
+			reset_server_state(data);
+			usleep(200);
+			ft_printf("|Server reset and ready for new messages|\n");
 			kill(info->si_pid, SIGUSR2);
 			return (1);
 		}
-		ft_printf("Memory allocation success\n");
+		ft_printf("Message length => %d\n", data->message_length);
 		data->message[data->message_length] = '\0';
-		usleep(300);
+		usleep(200);
 		kill(info->si_pid, SIGUSR1);
 		ft_printf("\n");
 	}
@@ -53,13 +67,11 @@ static void	handle_message(int signum, siginfo_t *info, t_data *data)
 		{
 			ft_putstr_fd(data->message, 1);
 			ft_putchar_fd('\n', 1);
-			free(data->message);
-			data->message = NULL;
-			data->index = 0;
-			data->receiving_length = 1;
-			data->message_length = 0;
-			data->length_bits_received = 0;
+			usleep(200);
 			kill(info->si_pid, SIGUSR1);
+			reset_server_state(data);
+			usleep(200);
+			ft_printf("|Server ready for new messages|\n");
 		}
 		data->bit_count = 0;
 		data->c = 0;
